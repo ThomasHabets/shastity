@@ -307,6 +307,9 @@ class Configuration(object):
                conf.options()['some-option'].get_required(). Note the
                equivalent of hyphens and underscores.
     """
+    def to_dict(self):
+        raise NotImplementedError()
+
     def options(self):
         """
         Return all options in this configuration.
@@ -337,6 +340,11 @@ class Configuration(object):
     opts = property(__not_implemented)
 
 class DefaultConfiguration(Configuration):
+    def to_dict(self):
+        ret = {}
+        for k in self.__options.keys():
+            ret[k] = self.__options.get(k).get()
+        return ret
     def __init__(self, opts=None):
         """
         @param opts: None, or dict of name->option mappings.
