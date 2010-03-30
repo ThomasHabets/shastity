@@ -14,6 +14,8 @@ library API for Python callers.
 from __future__ import absolute_import
 from __future__ import with_statement
 
+import shastity.verbosity as verbosity
+
 class RequiredOptionMissingError(Exception):
     """
     Raised to indicate an option value was mssing, where it was in
@@ -263,6 +265,16 @@ class StringOption(AbstractOption):
 class IntOption(AbstractOption):
     def _parse(self, s):
         return int(s)
+
+    def _validate(self, value):
+        self._assertType(value, int)
+
+class VerboseOption(IntOption):
+    def _parse(self, s):
+        try:
+            return int(s)
+        except ValueError, e:
+            return verbosity.string_to_verbosity(s)
 
     def _validate(self, value):
         self._assertType(value, int)
