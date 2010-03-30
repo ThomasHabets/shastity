@@ -269,18 +269,21 @@ def list_manifest(config, uri):
     labels,mfs = zip(*lmfs)
     uploaded = get_all_blockhashes(mfs, unique=False)
 
-    print "%-20s %6s %7s %7s" % ('Manifest', 'Files', 'Blocks', 'Shared')
+    print "%-30s %6s %7s %7s %7s" % ('Manifest', 'Files', 'Blocks', 'Shared',
+                                     'MB')
 
     for label,mf in lmfs:
         shared = 0
+        size = sum([x[1].size for x in mf])
         blocks = flatten([x[2] for x in mf])
         for h in blocks:
             if uploaded.count(h) > 1:
                 shared += 1
-        print "%-20s %6d %7d %7d" % (label,
-                                    len(mf),
-                                    len(blocks),
-                                    shared)
+        print "%-30s %6d %7d %7d %7d" % (label,
+                                         len(mf),
+                                         len(blocks),
+                                         shared,
+                                         size / 1000000)
 
 def common_blocks(config, uri, *mf_names):
     b = get_backend_factory(uri, config)()
