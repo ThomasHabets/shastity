@@ -46,3 +46,6 @@ def to_verbosity(level):
         raise InvalidLogLevel(level)
 
     return _name_map[_level_map[level]]
+
+def string_to_verbosity(s):
+    return _name_map[s.upper()]
