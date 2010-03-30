@@ -115,6 +115,10 @@ _all_commands = [ Command('persist',
                           ['uri'],
                           options.GlobalOptions(),
                           description='List blocks in data store'),
+                  Command('list-orphans',
+                          ['uri'],
+                          options.GlobalOptions(),
+                          description='List blocks that are not in any manifest'),
                   ]
 
 def all_commands():
@@ -321,6 +325,22 @@ def list_blocks(config, uri):
     b = get_backend_factory(uri, config)()
     for name in b.list():
         print name
+
+def list_orphans(config, uri):
+    mpath, dpath = uri.split(',')
+
+    b_data = get_backend_factory(dpath, config)()
+    all_blocks = b_data.list()
+
+    b_manifest = get_backend_factory(mpath, config)()
+    lmfs = list(get_all_manifests(b_manifest))
+    labels,mfs = zip(*lmfs)
+    mf_blocks = get_all_blockhashes(mfs, unique=False)
+
+    for hash in all_blocks:
+        algo = 'sha512' # TODO: assumed this
+        if (algo, hash) not in all_blocks:
+            print hash
 
 def verify(config, src_path, dst_uri):
     raise NotImplementedError('very not implemented')
