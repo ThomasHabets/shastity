@@ -107,6 +107,10 @@ _all_commands = [ Command('persist',
                           ['uri', 'label'],
                           options.GlobalOptions(),
                           description='Show manifest in readable format'),
+                  Command('list-blocks',
+                          ['uri'],
+                          options.GlobalOptions(),
+                          description='List blocks in data store'),
                   ]
 
 def all_commands():
@@ -280,6 +284,11 @@ def get_block(config, uri, block_name, local_name=None):
     b = get_backend_factory(uri,
                             config.get_option('crypto-key').get_required())()
     open(local_name, 'w').write(b.get(block_name))
+
+def list_blocks(config, uri):
+    b = get_backend_factory(uri, config)()
+    for name in b.list():
+        print name
 
 def verify(config, src_path, dst_uri):
     raise NotImplementedError('very not implemented')
