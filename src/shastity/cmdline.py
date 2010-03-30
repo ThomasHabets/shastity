@@ -152,7 +152,8 @@ def main():
 
         getattr(commands, command.replace('-','_'))(config, *args)
         sys.exit(0)
-
+    except KeyboardInterrupt, e:
+        logging.error('shastity: Control-C pressed')
     except CommandLineError, e:
         logging.error('shastity: command line error: %s', unicode(e))
     except Exception, e:

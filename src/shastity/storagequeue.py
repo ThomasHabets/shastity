@@ -118,6 +118,8 @@ class StorageOperation(object):
             log.debug('operation done: %s', str(self))
 
             self.__sq.notify_operation_complete(self)
+        except KeyboardInterrupt, e:
+            raise
         except Exception, e:
             self.__set_result(False, traceback.format_exc())
 
