@@ -61,6 +61,8 @@ def _persist_file(fs,
                                        '' % (basepath, path))
 
     stripped_path = path[len(basepath):]
+    blocks_upped = 0
+    blocks_skipped = 0
 
     if meta.is_symlink:
         return (stripped_path, meta, [])
@@ -82,9 +84,13 @@ def _persist_file(fs,
                     sq.enqueue(storagequeue.PutOperation(name=hash,
                                                          data=block))
                     skip_blocks.append( (algo,hash) )
+                    blocks_upped += 1
                 else:
                     #print "Skipping block"
+                    blocks_skipped += 1
                     pass
+            log.info("[%s] scheduled. Blocks up/skip: %d/%d",
+                     stripped_path, blocks_upped, blocks_skipped)
             return (stripped_path, meta, hashes)
 
 def persist(fs,
