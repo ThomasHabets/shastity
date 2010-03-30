@@ -40,3 +40,18 @@ def GlobalOptions():
 def EncryptionOptions():
     return _config([config.StringOption('crypto-key', 'k', None,
                                         short_help='Encryption key')])
+
+def S3Options():
+    return _config([
+            config.StringOption('aws_secret_access_key', None, None,
+                                short_help='S3 Secret key'),
+            config.StringOption('aws_access_key_id', None, None,
+                                short_help='S3 Access key'),
+                    ])
+
+
+def PersistOptions():
+    return _config([
+            config.StringOption('skip-blocks', None, None,
+                                short_help='File containing blocks to skip'),
+                    ])

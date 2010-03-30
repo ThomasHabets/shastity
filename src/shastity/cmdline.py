@@ -58,6 +58,10 @@ def _make_config(cmdname):
     if cmdname in ('list-manifest', 'persist', 'materialize', 'get-blocks',
                    'show-manifest', 'common-blocks', 'list-blocks'):
         opts = opts.merge(options.EncryptionOptions())
+        opts = opts.merge(options.S3Options())
+
+    if cmdname in ('persist'):
+        opts = opts.merge(options.PersistOptions())
 
     return opts
 
