@@ -44,7 +44,9 @@ import re
 import locale
 
 import shastity.options as options
+import shastity.config as config
 import shastity.traversal as traversal
+import shastity.logging as logging
 import shastity.manifest as manifest
 import shastity.filesystem as filesystem
 import shastity.persistence as persistence
@@ -52,6 +54,8 @@ import shastity.materialization as materialization
 import shastity.storagequeue as storagequeue
 import shastity.backends.s3backend as s3backend
 import shastity.backends.gpgcrypto as gpgcrypto
+
+log = logging.get_logger(__name__)
 
 # In the future we'll have groups of commands too, or else command
 # listings to the user become too verbose.
@@ -147,24 +151,38 @@ def get_all_blockhashes(mfs, unique = True):
         ret = list(set(ret))
     return ret
 
-def persist(config, src_path, dst_uri):
+def persist(conf, src_path, dst_uri):
     mpath, label, dpath = dst_uri.split(',')
-    crypto_key = config.get_option('crypto-key').get_required()
-    blocksize = config.get_option('block-size').get_required()
+    blocksize = conf.get_option('block-size').get_required()
 
-    be = get_backend_factory(mpath, crypto_key)()
+    be = get_backend_factory(mpath, conf)()
 
-    mfs = get_all_manifests(be)
-    if len(mfs) != 0:
-        mfs = zip(*mfs)[1]
-        uploaded = get_all_blockhashes(mfs)
-    else:
-        uploaded = []
+    uploaded = []
+
+    try:
+        f = open(conf.get_option('skip-blocks').get_required())
+        log.info("loading skip-blocks file...")
+        for hash in f.readlines():
+            hash = hash.strip()
+            if len(hash) == 512/4:
+                alg = 'sha512' # TODO: assume this?
+            uploaded.append( (alg, hash) )
+        f.close()
+    except config.RequiredOptionMissingError, e:
+        pass
+
+    if not conf.get_option('skip-blocks').get():
+        log.info("checking old manifests...")
+        mfs = get_all_manifests(be)
+        if len(mfs) != 0:
+            mfs = zip(*mfs)[1]
+            uploaded.extend(get_all_blockhashes(mfs))
+
 
     # run persist
     fs = filesystem.LocalFileSystem()
     traverser = traversal.traverse(fs, src_path)
-    sq = storagequeue.StorageQueue(get_backend_factory(dpath, crypto_key),
+    sq = storagequeue.StorageQueue(get_backend_factory(dpath, conf),
                                    CONCURRENCY)
     mf = list(persistence.persist(fs,
                                   traverser,
@@ -179,17 +197,16 @@ def materialize(config, src_uri, dst_path, *files):
     if len(files) == 0:
         files = None
     mpath, label, dpath = src_uri.split(',')
-    crypto_key = config.get_option('crypto-key').get_required()
     fs = filesystem.LocalFileSystem()
     fs.mkdir(dst_path)
-    mf = list(manifest.read_manifest(get_backend_factory(mpath, crypto_key)(),
+    mf = list(manifest.read_manifest(get_backend_factory(mpath, config)(),
                                      label))
-    sq = storagequeue.StorageQueue(get_backend_factory(dpath, crypto_key),
+    sq = storagequeue.StorageQueue(get_backend_factory(dpath, config),
                                    CONCURRENCY)
     materialization.materialize(fs, dst_path, mf, sq, files)
 
-def get_backend_factory(uri, crypto_key):
-    """get_backend_factory(uri, crypto_key)
+def get_backend_factory(uri, config):
+    """get_backend_factory(uri, config)
 
     Parses a URI and creates the factory.
 
@@ -198,7 +215,9 @@ def get_backend_factory(uri, crypto_key):
     """
     type,ident = uri.split(':',1)
     if type == 's3':
-        ret = lambda: s3backend.S3Backend(ident)
+        ret = lambda: s3backend.S3Backend(ident, config.to_dict())
+        crypto_key = config.get_option('crypto-key').get_required()
+
         ret2 = lambda: gpgcrypto.DataCryptoGPG(ret(), crypto_key)
         ret3 = lambda: gpgcrypto.NameCrypto(ret2(), crypto_key)
         return ret3
@@ -212,8 +231,7 @@ def show_manifest(config, uri, label):
                       r"\1" + sep,
                       str(n))
 
-    crypto_key = config.get_option('crypto-key').get_required()
-    b = get_backend_factory(uri, crypto_key)()
+    b = get_backend_factory(uri, config)()
     print "%10s %7s %14s %s" % ('Attr','Blocks','Bytes','Name')
     print "-" * (10 + 7 + 14 + 2 + 10)
     totblocks = 0
@@ -235,8 +253,7 @@ def show_manifest(config, uri, label):
                                 )
 
 def list_manifest(config, uri):
-    b = get_backend_factory(uri,
-                            config.get_option('crypto-key').get_required())()
+    b = get_backend_factory(uri, config)()
 
     lmfs = list(get_all_manifests(b))
     lmfs.sort()
@@ -262,8 +279,7 @@ def list_manifest(config, uri):
                                     shared)
 
 def common_blocks(config, uri, *mf_names):
-    b = get_backend_factory(uri,
-                            config.get_option('crypto-key').get_required())()
+    b = get_backend_factory(uri, config)()
     mfs = [manifest.read_manifest(b, x) for x in mf_names]
     blocks = [get_all_blockhashes([x]) for x in mfs]
     all_blocks = flatten(blocks)
@@ -281,8 +297,7 @@ def common_blocks(config, uri, *mf_names):
 def get_block(config, uri, block_name, local_name=None):
     if local_name is None:
         local_name = block_name
-    b = get_backend_factory(uri,
-                            config.get_option('crypto-key').get_required())()
+    b = get_backend_factory(uri, config)()
     open(local_name, 'w').write(b.get(block_name))
 
 def list_blocks(config, uri):
