@@ -105,7 +105,8 @@ class S3Backend(backend.Backend):
         return k.get_contents_as_string()
 
     def list(self):
-        return [ k.name for k in self.__bucket().list() ]
+        for k in self.__bucket().list():
+            yield k.name
 
     def delete(self, name):
         self.__bucket().delete_key(name)
