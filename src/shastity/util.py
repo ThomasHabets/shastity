@@ -6,6 +6,22 @@
 Misc utilities.
 '''
 
+import os
+
+class AutoClose(object):
+    def __init__(self, fd):
+        self.fd = fd
+    def __del__(self):
+	if not self.fd is None:
+            os.close(self.fd)
+            self.fd = None
+    def fdopen(self, rw):
+        ret = os.fdopen(self.fd, rw)
+        self.fd = None
+        return ret
+    def fileno(self):
+        return self.fd
+
 def bind(callable, *bind_args, **bind_kwargs):
     """
     Create a callable which, when called, will call the given callable

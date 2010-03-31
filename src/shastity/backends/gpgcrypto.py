@@ -20,19 +20,7 @@ from Crypto.Cipher import AES
 
 import shastity.backend as backend
 import shastity.hash as hash
-
-class AutoClose(object):
-    def __init__(self, fd):
-        self.fd = fd
-    def __del__(self):
-	if not self.fd is None:
-            os.close(self.fd)
-    def fdopen(self, rw):
-        ret = os.fdopen(self.fd, rw)
-        self.fd = None
-        return ret
-    def fileno(self):
-        return self.fd
+from shastity.util import AutoClose
 
 def pipeWrap():
     return [AutoClose(x) for x in os.pipe()]
