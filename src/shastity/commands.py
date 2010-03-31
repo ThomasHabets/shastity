@@ -45,6 +45,7 @@ import locale
 
 import shastity.options as options
 import shastity.config as config
+import shastity.benchmark as benchmark
 import shastity.traversal as traversal
 import shastity.logging as logging
 import shastity.manifest as manifest
@@ -261,6 +262,25 @@ def show_manifest(config, uri, label):
                                 'Total'
                                 )
 
+def uniq_c(arr):
+    first = True
+    count = 1
+    ret = []
+    for x in arr:
+        if first:
+            last = x
+            first = False
+            continue
+        if x == last:
+            count += 1
+        else:
+            ret.append( (count, last) )
+            last = x
+            count = 1
+    if not first:
+        ret.append( (count, last) )
+    return ret
+
 def list_manifest(config, uri):
     b = get_backend_factory(uri, config)()
 
@@ -274,18 +294,29 @@ def list_manifest(config, uri):
     labels,mfs = zip(*lmfs)
     uploaded = get_all_blockhashes(mfs, unique=False)
 
-    print "%-20s %6s %7s %7s" % ('Manifest', 'Files', 'Blocks', 'Shared')
+    uploaded.sort()
+    uploaded = [y for x,y in uniq_c(uploaded) if x > 1]
+    uploaded = dict(zip(uploaded, [1] * len(uploaded)))
 
-    for label,mf in lmfs:
-        shared = 0
-        blocks = flatten([x[2] for x in mf])
-        for h in blocks:
-            if uploaded.count(h) > 1:
-                shared += 1
-        print "%-20s %6d %7d %7d" % (label,
-                                    len(mf),
-                                    len(blocks),
-                                    shared)
+    print "%-30s %6s %7s %7s %7s" % ('Manifest', 'Files', 'Blocks', 'Shared',
+                                     'MB')
+
+
+    # TODO: not really happy with the speed of this
+    #@benchmark.Benchmark('/tmp/shastity.txt', 'persist.print_it')
+    def print_it():
+        for label,mf in lmfs:
+            shared = 0
+            size = sum([x[1].size for x in mf])
+            blocks = flatten([x[2] for x in mf])
+            shared = sum([x in uploaded for x in blocks])
+            print "%-30s %6d %7d %7d %7d" % (label,
+                                             len(mf),
+                                             len(blocks),
+                                             shared,
+                                             size / 1000000)
+
+    print_it()
 
 def common_blocks(config, uri, *mf_names):
     b = get_backend_factory(uri, config)()
