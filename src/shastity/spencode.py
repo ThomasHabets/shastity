@@ -77,6 +77,8 @@ def spencode(s):
     
     @return A ASCII character string as per the description in the
             module documentation.
+
+    TODO: ugly hack to make it work with utf-8 input too.
     '''
     try:
         bytestr = s.encode('utf-8')
