@@ -155,7 +155,9 @@ def persist(conf, src_path, dst_uri):
     mpath, label, dpath = dst_uri.split(',')
     blocksize = conf.get_option('block-size').get_required()
 
-    be = get_backend_factory(mpath, conf)()
+    bf_manifest = get_backend_factory(mpath, conf)
+    b_manifest = bf_manifest()
+    bf_data = get_backend_factory(dpath, conf)
 
     uploaded = []
 
@@ -173,16 +175,23 @@ def persist(conf, src_path, dst_uri):
 
     if not conf.get_option('skip-blocks').get():
         log.info("checking old manifests...")
-        mfs = get_all_manifests(be)
+        mfs = get_all_manifests(b_manifest)
         if len(mfs) != 0:
             mfs = zip(*mfs)[1]
             uploaded.extend(get_all_blockhashes(mfs))
 
+    if conf.get_option('continue').get_required():
+        log.info("checking for previously upped blocks...")
+        for hash in bf_data().list():
+            hash = hash.strip()
+            if len(hash) == 512/4:
+                alg = 'sha512' # TODO: assume this?
+            uploaded.append( (alg, hash) )
 
     # run persist
     fs = filesystem.LocalFileSystem()
     traverser = traversal.traverse(fs, src_path)
-    sq = storagequeue.StorageQueue(get_backend_factory(dpath, conf),
+    sq = storagequeue.StorageQueue(bf_data,
                                    CONCURRENCY)
     mf = list(persistence.persist(fs,
                                   traverser,
@@ -191,7 +200,7 @@ def persist(conf, src_path, dst_uri):
                                   sq,
                                   blocksize=blocksize,
                                   skip_blocks=uploaded))
-    manifest.write_manifest(be, label, mf)
+    manifest.write_manifest(b_manifest, label, mf)
 
 def materialize(config, src_uri, dst_path, *files):
     if len(files) == 0:
