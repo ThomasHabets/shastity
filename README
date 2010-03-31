@@ -60,3 +60,7 @@ shastity materialize s3:manifest-bucket,manifest-name,s3:data-bucket \
          shastity-temp
 
 find shastity-temp
+
+== Notes ==
+* manifests store filenames in utf8. If you use something else (or a
+  mix of several) then sucks to be you.
