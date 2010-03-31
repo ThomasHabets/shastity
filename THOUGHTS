@@ -19,6 +19,9 @@ In order to GC you need access to all crypto keys, or you won't be able to
 read the manifests to know what blocks are in use, and you won't know the
 encrypted names of the blocks when you want to delete them.
 
+For GC and other things it's sometimes good to know what hash
+algorithm is being used even if you don't have access to the manifest.
+
 == GPG ==
 Use GPG for data encryption? KeyCzar?
 Manifest could contain which crypto wrapper to use for a given block.
@@ -27,3 +30,6 @@ That way you don't have to re-upload if you change your mind.
 == Amazon MD5 ==
 Store MD5 as amazon metadata.
 Also double-check when materializing.
+
+Update: this is automatically done when using set_contents_from_*()
+with boto. So done.

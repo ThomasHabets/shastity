@@ -116,6 +116,10 @@ _all_commands = [ Command('persist',
                           ['uri'],
                           options.GlobalOptions(),
                           description='List blocks in data store'),
+                  Command('list-orphans',
+                          ['uri'],
+                          options.GlobalOptions(),
+                          description='List blocks that are not in any manifest'),
                   ]
 
 def all_commands():
@@ -293,30 +297,44 @@ def list_manifest(config, uri):
 
     labels,mfs = zip(*lmfs)
     uploaded = get_all_blockhashes(mfs, unique=False)
+    nuploaded = len(set(uploaded))
 
     uploaded.sort()
-    uploaded = [y for x,y in uniq_c(uploaded) if x > 1]
-    uploaded = dict(zip(uploaded, [1] * len(uploaded)))
-
-    print "%-30s %6s %7s %7s %7s" % ('Manifest', 'Files', 'Blocks', 'Shared',
-                                     'MB')
-
+    dups = [y for x,y in uniq_c(uploaded) if x > 1]
+    dups = dict(zip(dups, [1] * len(uploaded)))
 
     # TODO: not really happy with the speed of this
     #@benchmark.Benchmark('/tmp/shastity.txt', 'persist.print_it')
     def print_it():
+        totfiles = 0
+        totblocks = 0
+        totsize = 0
+        shead = "%-30s %6s %7s %7s %7s"
+        sdata = "%-30s %6d %7d %7d %7d"
+        print shead % ('Manifest', 'Files', 'Blocks', 'Shared', 'MB')
+        print "-" * 79
         for label,mf in lmfs:
             shared = 0
             size = sum([x[1].size for x in mf])
             blocks = flatten([x[2] for x in mf])
-            shared = sum([x in uploaded for x in blocks])
-            print "%-30s %6d %7d %7d %7d" % (label,
-                                             len(mf),
-                                             len(blocks),
-                                             shared,
-                                             size / 1000000)
-
+            shared = sum([x in dups for x in blocks])
+            totfiles += len(mf)
+            totblocks += len(blocks)
+            totsize += size
+            print sdata % (label,
+                           len(mf),
+                           len(blocks),
+                           shared,
+                           size / 1000000)
+        print "-" * 79
+        print (sdata % ('Total',
+                        totfiles,
+                        nuploaded,
+                        totblocks-nuploaded,
+                        totsize/1000000)) + ' unpacked/unshared'
     print_it()
+
+
 
 def common_blocks(config, uri, *mf_names):
     b = get_backend_factory(uri, config)()
@@ -344,6 +362,22 @@ def list_blocks(config, uri):
     b = get_backend_factory(uri, config)()
     for name in b.list():
         print name
+
+def list_orphans(config, uri):
+    mpath, dpath = uri.split(',')
+
+    b_data = get_backend_factory(dpath, config)()
+    all_blocks = b_data.list()
+
+    b_manifest = get_backend_factory(mpath, config)()
+    lmfs = list(get_all_manifests(b_manifest))
+    labels,mfs = zip(*lmfs)
+    mf_blocks = get_all_blockhashes(mfs, unique=False)
+
+    for hash in all_blocks:
+        algo = 'sha512' # TODO: assumed this
+        if (algo, hash) not in all_blocks:
+            print hash
 
 def verify(config, src_path, dst_uri):
     raise NotImplementedError('very not implemented')

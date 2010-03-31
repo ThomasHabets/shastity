@@ -78,7 +78,15 @@ def spencode(s):
     @return A ASCII character string as per the description in the
             module documentation.
     '''
-    bytestr = s.encode('utf-8')
+    try:
+        bytestr = s.encode('utf-8')
+    except Exception, e:
+        try:
+            # already utf-8?
+            s.decode('utf-8')
+            bytestr = s[:]
+        except:
+            raise e
 
     asciistr = "'%s'" % (_urlenc(bytestr))
 
