@@ -54,6 +54,6 @@ def PersistOptions():
     return _config([
             config.StringOption('skip-blocks', None, None,
                                 short_help='File containing blocks to skip'),
-            config.BoolOption('continue', None, None,
+            config.BoolOption('continue', None, False,
                               short_help='Check list of blocks uploaded'),
                     ])
