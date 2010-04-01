@@ -4,5 +4,3 @@ TODO before first release
 * Put generalized backend wrapping somewhere other than gpgcrypto backend.
 * Proper cmdline parsing
 * Summary output after persist/materialize
-* Optionally get already-uploaded list from the data bucket, in case the last
-  backup broke before manifest was written.
