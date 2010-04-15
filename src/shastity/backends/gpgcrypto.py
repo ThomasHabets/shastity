@@ -102,9 +102,9 @@ class NameCrypto(BackendWrapper):
     Since all names (except manifests) are hashes to begin with, there
     should be no problem with related plaintext attacks.
     """
-    def __init__(self, next, cryptoKey):
+    def __init__(self, next, cryptoKey, hash_algorithm='sha512'):
         BackendWrapper.__init__(self, next)
-        self.cryptoKey = hash.make_hasher('sha512')(cryptoKey)[1]
+        self.cryptoKey = hash.make_hasher(hash_algorithm)(cryptoKey)[1]
 
     def put(self, key, data):
         return self.next.put(self.__enc(key), data)
