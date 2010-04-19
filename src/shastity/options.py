@@ -47,6 +47,12 @@ def S3Options():
                                 short_help='S3 Secret key'),
             config.StringOption('aws_access_key_id', None, None,
                                 short_help='S3 Access key'),
+            config.StringOption('proxy', None, None,
+                                short_help='HTTP Proxy address'),
+            config.StringOption('proxy_port', None, None,
+                                short_help='HTTP Proxy port'),
+            config.StringOption('https', None, True,
+                                short_help='Use HTTPS with S3'),
                     ])
 
 

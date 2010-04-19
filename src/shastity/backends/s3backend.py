@@ -49,6 +49,9 @@ class S3Backend(backend.Backend):
 
         log.debug('attempting to connect to s3')
         self.__conn = connection.S3Connection(host=self.__opts.get('s3_host', connection.S3Connection.DefaultHost),
+                                              proxy=self.__opts.get('proxy', None),
+                                              proxy_port=self.__opts.get('proxy_port', None),
+                                              is_secure=self.__opts.get_required('https'),
                                               aws_access_key_id=self.__opts.get('aws_access_key_id', None),
                                               aws_secret_access_key=self.__opts.get('aws_secret_access_key', None))
         self.__conn.calling_format = connection.SubdomainCallingFormat()
