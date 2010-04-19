@@ -55,7 +55,7 @@ def S3Options():
                                 short_help='HTTP Proxy address'),
             config.StringOption('proxy_port', None, None,
                                 short_help='HTTP Proxy port'),
-            config.StringOption('https', None, True,
+            config.BoolOption('https', None, True,
                                 short_help='Use HTTPS with S3'),
                     ])
 

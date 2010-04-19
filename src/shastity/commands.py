@@ -235,7 +235,7 @@ def get_backend_factory(uri, config):
     type,ident = uri.split(':',1)
     if type == 's3':
         ret = lambda: s3backend.S3Backend(ident, config.to_dict())
-    if type == 'dir':
+    elif type == 'dir':
         ret = lambda: directorybackend.DirectoryBackend(ident,
                                                         config.to_dict())
     else:
