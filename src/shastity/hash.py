@@ -23,7 +23,7 @@ class UnsupportedHashAlgorithm(Exception):
     pass
 
 _all_supported_hashlib_algos = [ 'sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'md5' ]
-_our_supported_hashlib_algos = [ 'sha512' ]
+_our_supported_hashlib_algos = [ 'sha512', 'sha1' ]
 
 def make_hasher(name):
     """

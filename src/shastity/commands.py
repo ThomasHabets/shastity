@@ -54,6 +54,7 @@ import shastity.persistence as persistence
 import shastity.materialization as materialization
 import shastity.storagequeue as storagequeue
 import shastity.backends.s3backend as s3backend
+import shastity.backends.directorybackend as directorybackend
 import shastity.backends.gpgcrypto as gpgcrypto
 
 log = logging.get_logger(__name__)
@@ -234,12 +235,26 @@ def get_backend_factory(uri, config):
     type,ident = uri.split(':',1)
     if type == 's3':
         ret = lambda: s3backend.S3Backend(ident, config.to_dict())
-        crypto_key = config.get_option('crypto-key').get_required()
+    if type == 'dir':
+        ret = lambda: directorybackend.DirectoryBackend(ident,
+                                                        config.to_dict())
+    else:
+        raise NotImplementedError('backend type %s not implemented' % (type))
 
+    crypto_key = config.get_option('crypto-key').get_required()
+    hash = config.get_option('hash').get_required()
+    if True:
         ret2 = lambda: gpgcrypto.DataCryptoGPG(ret(), crypto_key)
-        ret3 = lambda: gpgcrypto.NameCrypto(ret2(), crypto_key)
-        return ret3
-    raise NotImplementedError('backend type %s not implemented' % (type))
+    else:
+        ret2 = ret
+    if True:
+        ret3 = lambda: gpgcrypto.NameCrypto(ret2(),
+                                            crypto_key,
+                                            hash_algorithm=hash)
+    else:
+        ret3 = ret2
+    return ret3
+
 
 def show_manifest(config, uri, label):
     def number_group(n, sep):

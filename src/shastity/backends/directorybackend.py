@@ -62,7 +62,9 @@ class DirectoryBackend(backend.Backend):
 
         log.info('putting %s (%d bytes)', name, len(data))
 
-        fd, tmppath = tempfile.mkstemp(prefix=self.hidden_prefix, dir=self.__path, suffix=('-%s' % (name,)))
+        fd, tmppath = tempfile.mkstemp(prefix=self.hidden_prefix,
+                                       dir=self.__path,
+                                       suffix='-' + name)
         try:
             tmppath_dir, tmppath_file = os.path.split(tmppath)
             assert tmppath_file.startswith(self.hidden_prefix)
