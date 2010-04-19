@@ -100,6 +100,10 @@ _all_commands = [ Command('persist',
                           ['uri'],
                           options.GlobalOptions(),
                           description='List names of manifests'),
+                  Command('list-files',
+                          ['uri'],
+                          options.GlobalOptions(),
+                          description='List names of blocks or manifests'),
                   Command('common-blocks',
                           ['uri'],
                           options.GlobalOptions(),
@@ -284,6 +288,13 @@ def uniq_c(arr):
     if not first:
         ret.append( (count, last) )
     return ret
+
+def list_files(config, uri):
+    b = get_backend_factory(uri, config)()
+    fs = b.list()
+    fs.sort()
+    for f in fs:
+        print f
 
 def list_manifest(config, uri):
     b = get_backend_factory(uri, config)()

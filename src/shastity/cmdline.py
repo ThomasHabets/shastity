@@ -55,7 +55,9 @@ def _make_config(cmdname):
     else:
         opts = options.GlobalOptions()
 
-    if cmdname and cmdname in ('list-manifest', 'persist', 'materialize',
+    if cmdname and cmdname in ('list-manifest',
+                               'list-files',
+                               'persist', 'materialize',
                                'get-blocks', 'show-manifest',
                                'common-blocks', 'list-blocks',
                                'list-orphans'):
